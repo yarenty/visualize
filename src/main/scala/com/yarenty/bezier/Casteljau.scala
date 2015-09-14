@@ -35,29 +35,34 @@ class Casteljau {
   def extend(points: List[Double], times: Int): List[Double] = {
     val n = points.length
     val size = n * times
-    val out: Array[Double] = new Array[Double](size)
+    val out: Array[Double] = new Array[Double](size + 1)
 
     var p0 = points(0)
     var p1 = points(0)
     var p2 = points(1)
     var p3 = points(2)
 
-    var x = 0
+    var idx = 0
     var t = 0.0
-    for (i <- 0 to size - 1) {
-      x = i / times
-      t = (i % times) / times.toDouble
 
-      if (i < times) p0 = points(0) else points(x - 1) //start
-      p1 = points(x)
-      if (x >= (n - 1)) p2 = points(n - 1) else p2 = points(x + 1) //end
-      if (x >= (n - 2)) p3 = points(n - 1) else p3 = points(x + 2) //end
+    //TODO: this is wrong I need to go two times through each of points
+    for (i <- 0 to n - 1) {
+      for (j <- -times to times) {
 
-      out(i) = ((1 - t) * (1 - t) * p0 + 2 * (1 - t) * t * p1 + t * t * p2
-        + (1 - t) * (1 - t) * p1 + 2 * (1 - t) * t * p2 + t * t * p3) / 2.0
+        idx = i * times + j //this is wrong! idsx should be from -M to +M
+        t = (times + j).toDouble / (2 * times).toDouble
+
+        if (i < 1) p0 = points(0) else points(i - 1) //start
+        p1 = points(i)
+        if (i >= (n - 1)) p2 = points(n - 1) else p2 = points(i + 1) //end
+
+        if (idx > 0)
+          out(idx) += ((1 - t) * (1 - t) * p0 + 2 * (1 - t) * t * p1 + t * t * p2) / 3.0
+      }
     }
 
-    interpolate(interpolate(out.toList))
+    out.toList
+    // interpolate(out.toList)
 
   }
 
@@ -78,6 +83,8 @@ class Casteljau {
 
     var x = 0
     var t = 0.0
+
+    // TODO
     for (i <- 0 to size - 1) {
       x = i / times
       t = (i % times) / times.toDouble
